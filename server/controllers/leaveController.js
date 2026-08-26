@@ -1,11 +1,12 @@
 
 
-// create leave
+
 
 import e from "express";
 import Employee from "../models/Employee.js";
 import LeaveApplication from "../models/LeaveApplication.js";
 
+// create leave
 // POST /api/leaves
 export const createLeave = async (req, res) => {
     try {

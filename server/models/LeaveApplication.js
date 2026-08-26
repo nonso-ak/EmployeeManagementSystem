@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const leaveApplicationSchema = new mongoose.Schema({
     employeeId: {type: mongoose.Schema.Types.ObjectId, ref:"Employee", required: true},
-    type: {type: Strinf, enum: ["SICK", "CASUAL", "ANNUAL"], reuired: true},
+    type: {type: String, enum: ["SICK", "CASUAL", "ANNUAL"], reuired: true},
     startDate: {type: Date, required: true},
     endDate: {type: Date, required: true},
     reson: {type: String, required: true},
