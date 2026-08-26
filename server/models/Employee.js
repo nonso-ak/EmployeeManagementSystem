@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { DEPARTMENTS } from "../constants/departments";
+import { DEPARTMENTS } from "../constants/departments.js";
 
 const employeeSchema = new mongoose.Schema({
-    userId: {type: mobgoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+    userId: {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     firstName: {type: String, required: true},
     email: {type: String, required: true},
     phone: {type: String, required: true},

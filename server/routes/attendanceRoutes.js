@@ -1,9 +1,10 @@
 import { Router } from "express"
-import { clockInOut, getAttendance } from "../controllers/attendanceController";
+import { clockInOut, getAttendance } from "../controllers/attendanceController.js";
+import { protect } from "../middleware/auth.js";
 
 const attendanceRouter = Router();
 
-attendanceRouter.post('/', ProcessingInstruction, clockInOut)
-attendanceRouter.get('/', ProcessingInstruction, getAttendance)
+attendanceRouter.post('/', protect, clockInOut)
+attendanceRouter.get('/', protect, getAttendance)
 
 export default attendanceRouter;
