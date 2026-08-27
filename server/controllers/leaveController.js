@@ -13,7 +13,7 @@ export const createLeave = async (req, res) => {
         const session = req.session;
         const employee = await Employee.findOne({userId: session.userId})
         if(!employee) return res.status(404).json({ error: "Employee not found" });
-        if(employee.idDeleted){
+        if(employee.isDeleted){
             return res.status(403).json({
                 error: "Your account is deactivated. You cannot apply for leave."
             })
