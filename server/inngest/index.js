@@ -28,16 +28,18 @@ const autoCheckOut = inngest.createFunction(
         await sendEmail({
             to: employee.email,
             subject: "Attendance Check-out Reminder",
-            body: `<div style="max-width: 600px;">
-            <h2>Hi ${employee.firstName}, </h2>
-            <p style="font-seize: 16px;">You have a check-in ${employee.department} today:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #007bff; margin: 8px 0;">${attendance?.checkIn?.toLocaleTimeString()}</p>
-            <p style="font-size: 16px;">Please make sure to check-out in one hour.</p>
-            <p style="font-size: 16px;">If you have any questions, please contact your admin.</p>
-            <br />
-            <p style="font-size: 16px;">Best Regards,</p>
-            <p style="font-size: 16px;">EMS</p>
-            </div> `
+            body:  `
+                <div style="max-width: 600px;">
+                    <h2>Hi ${employee.firstName}, 👋</h2>
+                    <p style="font-size: 16px;">You have a check-in in ${employee.department} today:</p>
+                    <p style="font-size: 18px; font-weight: bold; color: #007bff; margin: 8px 0;">${attendance?.checkIn?.toLocaleTimeString()}</p>
+                    <p style="font-size: 16px;">Please make sure to check-out in one hour.</p>
+                    <p style="font-size: 16px;">If you have any questions, please contact your admin.</p>
+                    <br />
+                    <p style="font-size: 16px;">Best Regards,</p>
+                    <p style="font-size: 16px;">EMS</p>
+                </div>
+            `
         })
 1
         //After 10 hours, mark attendance as 877checked out with status "LATE"
@@ -92,7 +94,7 @@ const leaveApplicationReminder = inngest.createFunction(
 
 // cron: Check attendance at 11:30 AM IST (06:00 UTC) and email absent employees
 const attendanceReminderCron = inngest.createFunction(
-  { id: "attendance-reminder-cron", triggers: [{cron: "0 0 6 * * *"}]},
+  { id: "attendance-reminder-cron", triggers: [{cron: "TZ=Asia/Kolkata 30 11 * * *"}]},
    // 06:00 UTC = 11:30 AM IST
   async ({ event, step }) => {
     // Step 1: Get today's date range (IST)
