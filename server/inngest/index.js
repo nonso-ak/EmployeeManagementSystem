@@ -3,6 +3,7 @@ import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
 import LeaveApplication from "../models/LeaveApplication.js";
 import e from "express";
+import sendEmail from "../config/nodemailer.js";
 
 // Create a client to send and receive events
 export const inngest = new Inngest({ id: "employeemanagementsystem" });
@@ -15,7 +16,7 @@ const autoCheckOut = inngest.createFunction(
     const {employeeId, attendanceId} = event.data;
 
     //wait for 9 hours
-    await step.sleepUntil("wait-for-the-9-hours", new Data(new Date().getTime() + 9 * 60 * 60 * 1000))
+    await step.sleepUntil("wait-for-the-9-hours", new Date(new Date().getTime() + 9 * 60 * 60 * 1000))
 
     // get Attendance data
     let attendance = await Attendance.findById(attendanceId)
@@ -51,9 +52,9 @@ const autoCheckOut = inngest.createFunction(
             attendance.workingHours = 4;
             attendance.dayType = "Half Day";
             attendance.status = "LATE";
-            await attendance.save();aqw11
+            await attendance.save();
         }
-    }q1
+    }
   },
 );
 
@@ -100,7 +101,7 @@ const attendanceReminderCron = inngest.createFunction(
     // Step 1: Get today's date range (IST)
     const today = await step.run("get-today-date", ()=>{
         const startUTC = new Date(new Date().toLocaleDateString("en-CA", {timeZone: "Asia/kolkata"}) + "T00:00:00 +05:30")
-        const endUTC = new Data(startUTC.getTime() + 24 * 60 * 60 * 1000);
+        const endUTC = new Date(startUTC.getTime() + 24 * 60 * 60 * 1000);
         return {startUTC: startUTC.toISOString(), endUTC: endUTC.toISOString()}
     })
 
@@ -124,7 +125,7 @@ const attendanceReminderCron = inngest.createFunction(
     })
 
     // Step 4: Get employee IDs who already checked in today
-    const checkedInIds = await step.riun("get-checked-in-ids",
+    const checkedInIds = await step.run("get-checked-in-ids",
         async ()=>{
             const attendances = await Attendance.find({
                 date: { $gte: new Date(today.startUTC), $lt: new Date(today.endUTC) },
@@ -169,5 +170,6 @@ const attendanceReminderCron = inngest.createFunction(
 // Create an empty array where we'll export future Inngest functions
 export const functions = [
     autoCheckOut,
-    leaveApplicationReminder
+    leaveApplicationReminder,
+    attendanceReminderCron
 ];
