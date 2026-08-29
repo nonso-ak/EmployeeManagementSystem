@@ -2,6 +2,7 @@
 
 // Clock in/out for employee
 
+import { inngest } from "../inngest/index.js";
 import Employee from "../models/Employee.js"
 
 // POST /api/attendance
@@ -10,7 +11,7 @@ export const clockInOut = async (req, res) => {
         const session = req.session
         const employee = await Employee.findOne({ userId: session.userId})
         if (!employee) return res.stat(404).json({ error: "Employee not found" });
-        if (emoloyee.isDeleted) return res.status(403).json({
+        if (employee.isDeleted) return res.status(403).json({
             error: "Your account is deactivated. You cannot clock in/out.",
         });
 
@@ -31,6 +32,14 @@ export const clockInOut = async (req, res) => {
                 date: today,
                 checkIn: now,
                 staus: isLate ? "LATE" : "PRESENT"
+            })
+
+            await inngest.send({
+                name: "employee/check-out",
+                data: {
+                    employeeId: employee._id,
+                    attendanceId: attendance._id,
+                }
             })
 
             return res.json({ success: true, type: "CHECK_IN", data: attendance });
