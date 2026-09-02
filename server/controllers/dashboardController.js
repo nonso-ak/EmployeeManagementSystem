@@ -5,6 +5,7 @@ import LeaveApplication from "../models/LeaveApplication.js";
 import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
 import { DEPARTMENTS } from "../constants/departments.js";
+import PaySlip from "../models/PaySlip.js"
 
 // GET /api/dashboard
 export const getDashboard = async (req, res) => {
@@ -18,7 +19,7 @@ export const getDashboard = async (req, res) => {
                         $gte: new Date(new Date().setHours(0,0,0,0)),
                         $lt: new Date(new Date().setHours(24,0,0,0)),
                     }
-                }).
+                }),
                 LeaveApplication.countDocuments({
                     status: "PENDING",
                 })
@@ -45,7 +46,12 @@ export const getDashboard = async (req, res) => {
 date: {
     $gte: new Date(today.getFullYear(), today.getMonth(), 1),
     $lt: new Date(today.getFullYear(), today.getMonth() + 1, 1),
-}                })
+}                }),
+LeaveApplication.countDocuments({
+    employeeId: employee._id,
+    status: "PENDING",
+}),
+Payslip.findOne({ employeeId: employee._id }).sort({ createdAt: -1 }).lean(),
             ])
 
             return res.json({

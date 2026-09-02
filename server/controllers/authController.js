@@ -20,7 +20,7 @@ export const login = async(req, res) => {
             return res.status(401).json({ error: "Not authorized as admin" });
         }
 
-        if(role_type = "employee" && user.role !== "EMPLOYEE"){
+        if(role_type === "employee" && user.role !== "EMPLOYEE"){
             return res.status(401).json({error: "Not authorized as employee"})
         }
 
