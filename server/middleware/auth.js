@@ -16,7 +16,7 @@ export const protect = (req, res, next)=>{
         req.session = session;
         next()
     } catch (error){
-    
+        
     }
 }
 

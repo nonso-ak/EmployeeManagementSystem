@@ -115,7 +115,7 @@ const attendanceReminderCron = inngest.createFunction(
     })
 
     // Step 3: Get employee IDs on approved leave today
-    const onLeaceIds = await step.run("get-on-leave-ids", async() => {
+    const onLeaveIds = await step.run("get-on-leave-ids", async() => {
         const leaves = await LeaveApplication.find({
             status: "APPROVED",
             startDate: {$lte: new Date(today.endUTC)},
@@ -159,9 +159,12 @@ const attendanceReminderCron = inngest.createFunction(
                         `
                     })
                 })
+                await Promise.all(emailPromises)
+                return {emailSent: absentEmployees.length}
             })
         }
 
+        
         return {totalActive: activeEmployees.length, onLeave: onLeaveIds.length, checkedIn: checkedInIds.length, absent: absentEmployees.length}
   }
 
