@@ -93,81 +93,177 @@ const leaveApplicationReminder = inngest.createFunction(
 
 );
 
-// cron: Check attendance at 11:30 AM IST (06:00 UTC) and email absent employees
+// Cron: Check attendance at 11:30 AM Toronto time
 const attendanceReminderCron = inngest.createFunction(
-  { id: "attendance-reminder-cron", triggers: [{cron: "TZ=America/Toronto 30 11 * * *"}]},
-   // 06:00 UTC = 11:30 AM IST
-  async ({ event, step }) => {
-    // Step 1: Get today's date range (IST)
-    const today = await step.run("get-today-date", ()=>{
-        const startUTC = new Date(new Date().toLocaleDateString("en-CA", {timeZone: "America/Toronto"}) + "T00:00:00 +05:30")
-        const endUTC = new Date(startUTC.getTime() + 24 * 60 * 60 * 1000);
-        return {startUTC: startUTC.toISOString(), endUTC: endUTC.toISOString()}
-    })
+    {
+        id: "attendance-reminder-cron",
+        triggers: [
+            { cron: "TZ=America/Toronto 30 11 * * *" }
+        ]
+    },
 
-    // Step 2: Get all active, non-deleted employees
-    const activeEmployees = await step.run("get-active-employees", async ()=>{
-        const employees = await Employee.find({
-            isDeleted: false,
-            employmentStatus: "ACTIVE",
-        }).lean();
-        return employees.map((e)=>({_id: e._id.toString(), firstName: e.firstName, lastName: e.lastName, email: e.email, department: e.department}))
-    })
+    async ({ event, step }) => {
 
-    // Step 3: Get employee IDs on approved leave today
-    const onLeaveIds = await step.run("get-on-leave-ids", async() => {
-        const leaves = await LeaveApplication.find({
-            status: "APPROVED",
-            startDate: {$lte: new Date(today.endUTC)},
-            endDate: { $gte: new Date(today.startUTC) },
-        }).lean();
-        return leaves.map((l)=>l.employeeId.toString())
-    })
+        // Step 1: Get today's date range (Toronto time)
+        const today = await step.run("get-today-date", () => {
+            const now = new Date();
 
-    // Step 4: Get employee IDs who already checked in today
-    const checkedInIds = await step.run("get-checked-in-ids",
-        async ()=>{
-            const attendances = await Attendance.find({
-                date: { $gte: new Date(today.startUTC), $lt: new Date(today.endUTC) },
-            }).lean();
-            return attendances.map((a)=> a.employeeId.toString())
-        })
+            const dateString = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "America/Toronto",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            }).format(now);
 
-        // Step 5: Filter absent employees (not on leave & not checked in)
-        const absentEmployees = activeEmployees.filter((emp)=>
-        !onLeaveIds.includes(emp._id) && !checkedInIds.includes(emp._id))
+            // Toronto midnight
+            const startUTC = new Date(`${dateString}T00:00:00`);
+
+            if (isNaN(startUTC.getTime())) {
+                throw new Error(`Invalid date created from: ${dateString}`);
+            }
+
+            const endUTC = new Date(
+                startUTC.getTime() + 24 * 60 * 60 * 1000
+            );
+
+            return {
+                startUTC: startUTC.toISOString(),
+                endUTC: endUTC.toISOString()
+            };
+        });
+
+
+        // Step 2: Get all active, non-deleted employees
+        const activeEmployees = await step.run(
+            "get-active-employees",
+            async () => {
+                const employees = await Employee.find({
+                    isDeleted: false,
+                    employmentStatus: "ACTIVE",
+                }).lean();
+
+                return employees.map((e) => ({
+                    _id: e._id.toString(),
+                    firstName: e.firstName,
+                    lastName: e.lastName,
+                    email: e.email,
+                    department: e.department
+                }));
+            }
+        );
+
+
+        // Step 3: Get employee IDs on approved leave today
+        const onLeaveIds = await step.run(
+            "get-on-leave-ids",
+            async () => {
+                const leaves = await LeaveApplication.find({
+                    status: "APPROVED",
+                    startDate: {
+                        $lte: new Date(today.endUTC)
+                    },
+                    endDate: {
+                        $gte: new Date(today.startUTC)
+                    },
+                }).lean();
+
+                return leaves.map((l) => l.employeeId.toString());
+            }
+        );
+
+
+        // Step 4: Get employee IDs who already checked in today
+        const checkedInIds = await step.run(
+            "get-checked-in-ids",
+            async () => {
+                const attendances = await Attendance.find({
+                    date: {
+                        $gte: new Date(today.startUTC),
+                        $lt: new Date(today.endUTC)
+                    },
+                }).lean();
+
+                return attendances.map(
+                    (a) => a.employeeId.toString()
+                );
+            }
+        );
+
+
+        // Step 5: Find absent employees
+        const absentEmployees = activeEmployees.filter(
+            (emp) =>
+                !onLeaveIds.includes(emp._id) &&
+                !checkedInIds.includes(emp._id)
+        );
+
 
         // Step 6: Send reminder emails
-        if(absentEmployees.length > 0){
-            await step.run("send-reminder-emails", async ()=>{
-                const emailPromises = absentEmployees.map((emp)=> {
-                    // send email
-                    sendEmail({
-                        to: emp.email,
-                        subject: `Attendance Reminder - Please Mark Your Attendance`,
-                        body: `<div style="max-width: 600px; font-family: Arial, sans-serif;">
-                                <h2>Hi ${emp.firstName}, 👋</h2>
-                                <p style="font-size: 16px;">We noticed you haven't marked your attendance yet today.</p>
-                                <p style="font-size: 16px;">The deadline was <strong>11:30 AM</strong> and your attendance is still missing.</p>
-                                <p style="font-size: 16px;">Please check in as soon as possible or contact your admin if you're facing any issues.</p>
-                                <br />
-                                <p style="font-size: 14px; color: #666;">Department: ${emp.department}</p>
-                                <br />
-                                <p style="font-size: 16px;">Best Regards,</p>
-                                <p style="font-size: 16px;"><strong>QuickEMS</strong></p>
-                            </div>
-                        `
-                    })
-                })
-                await Promise.all(emailPromises)
-                return {emailSent: absentEmployees.length}
-            })
+        if (absentEmployees.length > 0) {
+            await step.run(
+                "send-reminder-emails",
+                async () => {
+
+                    const emailPromises = absentEmployees.map((emp) =>
+                        sendEmail({
+                            to: emp.email,
+                            subject:
+                                "Attendance Reminder - Please Mark Your Attendance",
+
+                            body: `
+                                <div style="max-width: 600px; font-family: Arial, sans-serif;">
+                                    <h2>Hi ${emp.firstName}, 👋</h2>
+
+                                    <p style="font-size: 16px;">
+                                        We noticed you haven't marked your attendance yet today.
+                                    </p>
+
+                                    <p style="font-size: 16px;">
+                                        The deadline was <strong>11:30 AM</strong>
+                                        and your attendance is still missing.
+                                    </p>
+
+                                    <p style="font-size: 16px;">
+                                        Please check in as soon as possible or contact your admin if you're facing any issues.
+                                    </p>
+
+                                    <br />
+
+                                    <p style="font-size: 14px; color: #666;">
+                                        Department: ${emp.department}
+                                    </p>
+
+                                    <br />
+
+                                    <p style="font-size: 16px;">
+                                        Best Regards,
+                                    </p>
+
+                                    <p style="font-size: 16px;">
+                                        <strong>QuickEMS</strong>
+                                    </p>
+                                </div>
+                            `
+                        })
+                    );
+
+                    await Promise.all(emailPromises);
+
+                    return {
+                        emailSent: absentEmployees.length
+                    };
+                }
+            );
         }
 
-        
-        return {totalActive: activeEmployees.length, onLeave: onLeaveIds.length, checkedIn: checkedInIds.length, absent: absentEmployees.length}
-  }
 
+        return {
+            totalActive: activeEmployees.length,
+            onLeave: onLeaveIds.length,
+            checkedIn: checkedInIds.length,
+            absent: absentEmployees.length
+        };
+    }
 );
 
 // Create an empty array where we'll export future Inngest functions
