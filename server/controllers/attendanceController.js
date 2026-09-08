@@ -4,6 +4,7 @@
 
 import { inngest } from "../inngest/index.js";
 import Employee from "../models/Employee.js"
+import Attendance from "../models/Attendance.js";
 
 // POST /api/attendance
 export const clockInOut = async (req, res) => {
@@ -19,19 +20,19 @@ export const clockInOut = async (req, res) => {
         today.setHours(0, 0, 0, 0);
 
         const existing = await Attendance.findOne({
-            employeeId: employee_id,
+            employeeId: employee._id,
             date: today,
         })
 
         const now = new Date();
 
         if(!existing){
-            const isLate = now.getHours() >= 9 && now.getMinutes() > 0;
+            const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 0);
             const attendance = await Attendance.create({
                 employeeId: employee._id,
                 date: today,
                 checkIn: now,
-                staus: isLate ? "LATE" : "PRESENT"
+                status: isLate ? "LATE" : "PRESENT"
             })
 
             await inngest.send({
@@ -67,7 +68,7 @@ export const clockInOut = async (req, res) => {
             return res.json({ success: true, type: "CHECK_OUT", data: existing });
         }
 
-    } catch (erro) {
+    } catch (error) {
         console.error("Attendance Error:", error);
         return res.status(500).json({ error: "Operation failed" });
     }
@@ -86,7 +87,7 @@ export const getAttendance = async (req, res) => {
 
         return res.json({
             data: history,
-            employee: {isDeleted: employee}
+            employee: {isDeleted: employee.isDeleted}
         })
     } catch (error) {
         return res.status(500).json({ error: "Failed to fetch attendance" });

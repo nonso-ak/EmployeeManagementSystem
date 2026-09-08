@@ -10,13 +10,15 @@ const LeaveHistory = ({leaves, isAdmin, onUpdate}) => {
     const handleStatusUpdate = async (id, status) => {
         setProcessing(id)
         try {
-            await api.patch('/leave/${id}', {status})
+            await api.patch(`/leave/${id}`, {status})
+            onUpdate()
         } catch (error) {
             toast.error(error?.response?.data?.error || error?.message)
-        } finally{
+        } finally {
             setProcessing(null)
         }
     }
+
   return (
     <div className='card overflow-hidden'>
          <div className='overflow-x-auto'>
@@ -33,7 +35,7 @@ const LeaveHistory = ({leaves, isAdmin, onUpdate}) => {
                    </tr>
                </thead>
                <tbody>
-                   {history.length === 0 ? (
+                   {leaves.length === 0 ? (
                        <tr>
                            <td colSpan={isAdmin ? 6 : 4} className='text-center py-12 text-slate-400'>No leave applications found
                            </td>

@@ -10,8 +10,8 @@ import User from "../models/User.js";
 export const getEmployee = async (req, res)=>{
     try{
         const { department } = req.query;
-        const where = {};
-        if(department) where.department = department;
+        const where = { isDeleted: { $ne: true } };
+        if (department) where.department = department;
 
         const employees = await Employee.find(where).sort({createdAt: -1}).populate("userId", "email role").lean();
 
@@ -117,15 +117,18 @@ export const deleteEmployee = async (req, res)=>{
     try {
         const { id } = req.params;
 
-        const employee = await Employee.findById(id)
+        const employee = await Employee.findByIdAndUpdate(
+            id,
+            { isDeleted: true, employmentStatus: "INACTIVE" },
+            { new: true }
+        );
+
         if(!employee) return res.status(404).json({ error: "Employee not found" });
 
-        employee.isDeleted = true;
-        employee.employmentStatus = "INACTIVE"
-        await employee.save()
         return res.json({ success: true });
 
     } catch (error) {
-        return res.status(500).json({ error: "Failed to delete employee"});
+        console.error("Delete employee error:", error);
+        return res.status(500).json({ error: "Failed to delete employee" });
     }
 }

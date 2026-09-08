@@ -1,3 +1,5 @@
+import Payslip from "../models/Payslip.js";
+import Employee from "../models/Employee.js";
 
 // Create payslip
 // POST /api/payslips
@@ -11,10 +13,10 @@ export const createPayslip = async (req, res) => {
 
         const netSalary = Number(basicSalary) + Number (allowances || 0) - Number(deductions || 0);
         
-        const payslip = await Payslipcreate({
+        const payslip = await Payslip.create({
             employeeId,
             month: Number(month),
-            year: Numnber(year),
+            year: Number(year),
             basicSalary: Number(basicSalary),
             allowances: Number(allowances || 0),
             deductions: Number(deductions || 0),
@@ -34,7 +36,7 @@ export const getPayslips = async (req, res) => {
         const session = req.session;
         const isAdmin = session.role === "ADMIN";
         if(isAdmin){
-            const payslips = await Paydlip.find().populate("employeeId").sort({ createdAt: -1 });
+            const payslips = await Payslip.find().populate("employeeId").sort({ createdAt: -1 });
             const data = payslips.map((p)=>{
                 const obj = p.toObject();
                 return {

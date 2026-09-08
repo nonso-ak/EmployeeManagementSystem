@@ -23,6 +23,8 @@ const ApplyLeavelModal = ({open, onClose, onSuccess}) => {
             onClose();
         } catch (err) {
             toast.error(err.response?.data?.error || err?.message)
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -31,7 +33,7 @@ const ApplyLeavelModal = ({open, onClose, onSuccess}) => {
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm' onClick={onClose}>
 
-        <div className='relative bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fad-in' onClick={(e)=>e.stopPropagation()}>
+        <div className='relative bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in' onClick={(e)=>e.stopPropagation()}>
             {/*----Header----*/}
             <div className='flex items-center justify-between p-6 pb-0'>
                 <div>
@@ -41,7 +43,7 @@ const ApplyLeavelModal = ({open, onClose, onSuccess}) => {
                     <p className='text-sm text-slate-400 mt-0.5'>Submit your leave request for approval</p>
                 </div>
                 <button onClick={onClose} className='p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-600'>
-                    <X className='="w-5 h-5' />
+                    <X className='w-5 h-5' />
                 </button>
             </div>
 
@@ -73,7 +75,7 @@ const ApplyLeavelModal = ({open, onClose, onSuccess}) => {
                         </div>
                         <div>
                             <span className='block text-xs text-slate-400 mb-1'>To</span>
-                            <input type="date" name="endDate" reuired min={minDate}/>
+                            <input type="date" name="endDate" required min={minDate}/>
                         </div>
 
                     </div>
