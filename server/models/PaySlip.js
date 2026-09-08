@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const payslipSchema = new mongoose.Schema({
-    employeeid: {type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true},
+    employeeId: {type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true},
     month: { type: Number, required: true },
     year: { type: Number, required: true },
     basicSalary: { type: Number, required: true },
@@ -11,6 +11,6 @@ const payslipSchema = new mongoose.Schema({
 
 }, {timestamps: true})
 
-const Payslip = mongoose.models.Payslip || mongoose.model("Paylsip", payslipSchema)
+const Payslip = mongoose.models.Payslip || mongoose.model("Payslip", payslipSchema)
 
 export default Payslip;

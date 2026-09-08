@@ -5,6 +5,8 @@ import { PalmtreeIcon, PlusIcon, ThermometerIcon, UmbrellaIcon } from "lucide-re
 import LeaveHistory from "../components/leave/LeaveHistory"
 import ApplyLeavelModal from "../components/leave/ApplyLeavelModal"
 import { useAuth } from "../context/AuthContext"
+import api from "../api/axios"
+import toast from "react-hot-toast"
 
 const Leave = () => {
   const {user} = useAuth()

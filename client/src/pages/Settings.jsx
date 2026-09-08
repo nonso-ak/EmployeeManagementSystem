@@ -6,6 +6,7 @@ import ProfileForm from "../components/ProfileForm"
 import ChangePasswordModal from "../components/ChangePasswordModal"
 import { useAuth } from "../context/AuthContext"
 import toast from "react-hot-toast"
+import api from "../api/axios"
 
 const Settings = () => {
   const {user} = useAuth()

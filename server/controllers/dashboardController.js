@@ -51,7 +51,7 @@ LeaveApplication.countDocuments({
     employeeId: employee._id,
     status: "PENDING",
 }),
-Payslip.findOne({ employeeId: employee._id }).sort({ createdAt: -1 }).lean(),
+PaySlip.findOne({ employeeId: employee._id }).sort({ createdAt: -1 }).lean(),
             ])
 
             return res.json({

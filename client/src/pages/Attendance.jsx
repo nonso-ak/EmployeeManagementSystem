@@ -5,6 +5,7 @@ import CheckInButton from "../components/attendance/CheckInButton"
 import AttendanceStats from "../components/attendance/AttendanceStats"
 import AttendanceHistory from "../components/attendance/AttendanceHistory"
 import api from "../api/axios"
+import toast from "react-hot-toast"
 
 const Attendance = () => {
   const [history, setHistory] = useState([])
@@ -18,7 +19,7 @@ const Attendance = () => {
       setHistory(json.data || [])
       if(json.employee?.isDeleted) setIsDeleted(true)
     } catch (error) {
-      toast.error(error?.response?.dat?.error || error?.message)
+      toast.error(error?.response?.data?.error || error?.message)
     } finally{
       setLoading(false)
     }
